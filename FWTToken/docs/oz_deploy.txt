@@ -1,0 +1,115 @@
+Deploy Freeway Token on Ganache/Rinkeby Network(Below one is Ganache(development))
+
+Don't forget to (npm install)
+
+Open Terminal 1 on project root directory
+1. Start a Ganache local test network
+npx ganache-cli 
+
+(0) 0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1 (100 ETH) - Owner
+(1) 0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0 (100 ETH) - Seed Sale Vesting Vault Beneficiary
+(2) 0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b (100 ETH)
+(3) 0xE11BA2b4D45Eaed5996Cd0823791E0C93114882d (100 ETH)
+(4) 0xd03ea8624C8C5987235048901fB614fDcA89b117 (100 ETH)
+(5) 0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC (100 ETH)
+(6) 0x3E5e9111Ae8eB78Fe1CC3bb8915d5D461F3Ef9A9 (100 ETH)
+(7) 0x28a8746e75304c0780E011BEd21C72cD78cd535E (100 ETH)
+(8) 0xACa94ef8bD5ffEE41947b4585a84BdA5a3d3DA6E (100 ETH)
+(9) 0x1dF62f291b2E969fB0849d99D9Ce41e2F137006e (100 ETH)
+
+Open Terminal 2 on project root directory
+
+2. Compile contracts (delete is their is build folder inside your projects root directory)
+npx oz compile 
+
+NOTE : Allways copy & paste the address where your instance are created.
+
+3. Deploy Freeway Token Deployment
+npx oz deploy
+-> Choose kind of deployment (upgradeable   upgradeable instance using a delegating proxy (EIP1967))
+-> Choose Network (development)
+-> Pick a contract to deploy (FreewayToken)
+-> Call a function to initialize the instance after creating it? Y
+-> Select which function (initialize(sender: address))
+-> sender: address: 0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1
+
+4. Seedsale vesting vault Deployment
+npx oz deploy
+-> Choose kind of deployment (upgradeable   upgradeable instance using a delegating proxy (EIP1967))
+-> Choose Network (development)
+-> Pick a contract to deploy (VestingVault)
+-> Call a function to initialize the instance after creating it? Y
+-> Select which function (initialize(beneficiary: address, vestingAmount: uint256, start: uint256, cliffDuration: uint256, duration: uint256, interval: uint256, stamp: string, revocable: bool, hash: bytes32, signature: bytes))
+? beneficiary: address: 0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0
+? vestingAmount: uint256: 2000000000000000000000
+? start: uint256: 1603367328 // Current timestamp get it from https://www.epochconverter.com/
+? cliffDuration: uint256: 0
+? duration: uint256: 2592000
+? interval: uint256: 5 // Interval of time stamp is 5 Minutes for testing 
+? stamp: string: MIN
+? revocable: bool: true
+
+5. Let's Populate Seed Sale VestingVault with Vesting Amount
+npx oz send-tx
+-> Pick a network (development)
+-> Pick an instance FreewayToken at 0xA57B8a5584442B467b4689F1144D269d096A3daF
+-> Select which function transfer(_to: address, _value: uint256)
+? _to: address: 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe
+? _value: uint256: 2000000000000000000000
+
+6. Let's Verify the Seedsale Vesting Vault Balance
+npx oz call
+-> Pick a network (development)
+-> Pick an instance (FreewayToken at 0xA57B8a5584442B467b4689F1144D269d096A3daF)
+-> Select which function (balanceOf(account: address))
+? account: address: 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe
+
+7. Now Let's release our tokens (try to always release after cliff and interval)
+npx oz send-tx                                                                                                                                  
+-> Pick a network (development)
+-> Pick an instance (VestingVault at 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe)
+-> Select which function release(token: address)
+token: address: 0xA57B8a5584442B467b4689F1144D269d096A3daF
+NOTE : Will show ERROR as still have not verified the vesting contract's beneficiary address using signature
+
+8. Check the beneficiary's balance
+npx oz call                                                                                                                                     
+-> Pick a network (development)
+-> Pick an instance (FreewayToken at 0xA57B8a5584442B467b4689F1144D269d096A3daF)
+-> Select which function (balanceOf(account: address))
+? account: address: 0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0
+
+9. Check the beneficiary's Address Verfied
+npx oz call                                                                                                                                     
+-> Pick a network (development)
+-> Pick an instance (VestingVault at 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe)
+-> Select which function (beneficiaryVerified())
+NOTE : Will be false as not verified yet
+
+10. Now Let's verify our vesting contracts beneficiary
+npx oz send-tx                                                                                                                                  
+-> Pick a network (development)
+-> Pick an instance (VestingVault at 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe)
+-> Select which function (verifyAddress(hash: bytes32, signature: bytes))
+? hash: bytes32: 0x494bd16fb8745a9a3f92863f3f33d7c7e6737fe7af28493919319afd1186caa6
+? signature: bytes: 0xdaefa939d2bc9b93f03c4bfded1b09bb75c6fd37676b9057b72d3229f5b5512915cae2e5e29096400be265b57ac50475d19c452e4ec34e68054b15d7ae29fa701c
+
+11. Check the beneficiary's Address Verfied
+npx oz call                                                                                                                                     
+-> Pick a network (development)
+-> Pick an instance (VestingVault at 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe)
+-> Select which function (beneficiaryVerified())
+NOTE : Will be true as verified now
+
+12. Now Let's release our tokens (try to always release after cliff and interval)
+npx oz send-tx                                                                                                                                  
+-> Pick a network (development)
+-> Pick an instance (VestingVault at 0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe)
+-> Select which function release(token: address)
+token: address: 0xA57B8a5584442B467b4689F1144D269d096A3daF
+NOTE : Will release if time interval and cliff have been passed
+
+So that's all for now
+
+
+
